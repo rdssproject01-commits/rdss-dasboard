@@ -10,7 +10,7 @@ let isAdmin = false;
 let currentViewId = null;
 
 // Credentials (in a real app, this would be server-side auth)
-const ADMIN_CREDENTIALS = { username: 'admin', password: 'sstd@2024' };
+const ADMIN_CREDENTIALS = { username: 'rdss', password: 'project@123' };
 
 /* ===========================
    HELPERS
