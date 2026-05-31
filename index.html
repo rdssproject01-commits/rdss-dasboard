@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSTD Scheme Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.bundled.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-circle">SS</div>
+    <div>
+      <h1>SSTD Scheme Dashboard</h1>
+      <p>Subtransmission &amp; Distribution Circle Management</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="cloud-badge"><i class="fa fa-cloud"></i> Cloud Connected</span>
+    <button class="btn btn-outline" id="adminLoginBtn"><i class="fa fa-lock"></i> Admin Login</button>
+  </div>
+</header>
+
+<!-- YEAR SELECTOR -->
+<nav class="year-nav">
+  <button class="year-btn" data-fy="23">FY 2022-23 (FY 23)</button>
+  <button class="year-btn" data-fy="24">FY 2023-24 (FY 24)</button>
+  <button class="year-btn active" data-fy="25">FY 2024-25 (FY 25)</button>
+  <button class="year-btn" data-fy="26">FY 2025-26 (FY 26)</button>
+  <button class="year-btn" data-fy="27">FY 2026-27 (FY 27)</button>
+</nav>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab active" data-tab="dashboard"><i class="fa fa-chart-bar"></i> Dashboard &amp; Analytics</button>
+  <button class="tab" data-tab="data-entry"><i class="fa fa-plus-circle"></i> Data Entry (Add Work)</button>
+  <button class="tab" data-tab="review"><i class="fa fa-tasks"></i> Review Progress</button>
+</div>
+
+<!-- DASHBOARD TAB -->
+<div id="tab-dashboard" class="tab-content active">
+
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Works</div></div>
+    <div class="stat-card green"><div class="stat-num" id="statCompleted">0</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card yellow"><div class="stat-num" id="statInProgress">0</div><div class="stat-label">In Progress</div></div>
+    <div class="stat-card red"><div class="stat-num" id="statNotStarted">0</div><div class="stat-label">Not Started</div></div>
+    <div class="stat-card blue"><div class="stat-num" id="statAmount">0.00 L</div><div class="stat-label">Est. Amount</div></div>
+    <div class="stat-card purple"><div class="stat-num" id="statLines">0.0 Km</div><div class="stat-label">Total Lines</div></div>
+  </div>
+
+  <!-- DIVISION SUMMARY TABLE -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Division-wise Summary of Provision Parameters (Active Year)</h2>
+      <button class="btn btn-sm" id="downloadSummaryBtn"><i class="fa fa-download"></i> Download Summary Excel</button>
+    </div>
+    <div class="table-wrap">
+      <table id="summaryTable">
+        <thead>
+          <tr>
+            <th>Division Name</th>
+            <th>Total Works</th>
+            <th>Completion Progress</th>
+            <th>33 kV (km)</th>
+            <th>11 kV (km)</th>
+            <th>PTR (Nos)</th>
+            <th>PTR Cap (MVA)</th>
+            <th>DTR (Nos)</th>
+            <th>DTR Cap (kVA)</th>
+            <th>LT Line (km)</th>
+            <th>Estimate Amount</th>
+          </tr>
+        </thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- BUTTONS ROW -->
+  <div class="action-row">
+    <button class="btn btn-danger" id="clearAllBtn"><i class="fa fa-trash"></i> Clear All Data</button>
+    <button class="btn btn-secondary" id="resetSampleBtn"><i class="fa fa-rotate"></i> Reset Sample Data</button>
+    <button class="btn btn-success" id="exportDetailedBtn"><i class="fa fa-file-excel"></i> Export Detailed Excel</button>
+    <button class="btn btn-primary" id="addNewWorkDashBtn"><i class="fa fa-plus"></i> Add New Work</button>
+  </div>
+
+  <!-- DETAILED RECORDS TABLE -->
+  <section class="section">
+    <h2 id="detailTableTitle">Detailed Work Records (All Divisions - FY 25)</h2>
+    <div class="table-wrap">
+      <table id="detailTable">
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Work Details</th>
+            <th>Technical Provisions</th>
+            <th>Estimate Details</th>
+            <th>Work Order Info</th>
+            <th>Status</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- DATA ENTRY TAB -->
+<div id="tab-data-entry" class="tab-content">
+  <div class="auth-notice" id="authNotice">
+    <i class="fa fa-lock fa-2x"></i>
+    <p>You must log in as an administrator to unlock work manual entry and Excel bulk uploads.</p>
+    <button class="btn btn-primary" id="loginFromNotice">Login as Admin</button>
+  </div>
+
+  <!-- ADD WORK FORM -->
+  <div id="addWorkSection" class="hidden">
+    <section class="section form-section">
+      <h2>Add New SSTD Scheme Work Details</h2>
+      <form id="addWorkForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Financial Year *</label>
+            <select name="fy" required>
+              <option value="23">FY 23</option>
+              <option value="24">FY 24</option>
+              <option value="25" selected>FY 25</option>
+              <option value="26">FY 26</option>
+              <option value="27">FY 27</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Division *</label>
+            <select name="division" required>
+              <option value="">Select...</option>
+              <option>Mandsaur</option>
+              <option>Malhargarh</option>
+              <option>Garoth</option>
+              <option>Sitamau</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Name of Work *</label>
+            <input type="text" name="workName" required placeholder="Enter work name..." />
+          </div>
+          <div class="form-group full">
+            <label>Type of Work *</label>
+            <select name="workType" required>
+              <option value="">Select type...</option>
+              <option>1. New substation</option>
+              <option>2. 33 Kv line bifurcation</option>
+              <option>3. 11 Kv line bifurcation</option>
+              <option>4. Additional PTR</option>
+              <option>5. Augmentation PTR</option>
+              <option>6. Additional DTR</option>
+              <option>7. Augmentation DTR</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estimate Number (Optional)</label>
+            <input type="text" name="estimateNo" placeholder="Estimate No." />
+          </div>
+          <div class="form-group">
+            <label>Estimate Amount (Lakhs) (Optional)</label>
+            <input type="number" name="estimateAmount" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="form-group-header full"><strong>Provisions (All Optional)</strong></div>
+          <div class="form-group"><label>33 kV line in km</label><input type="number" name="line33kv" step="0.01" placeholder="0.00" /></div>
+          <div class="form-group"><label>11 kV line in km</label><input type="number" name="line11kv" step="0.01" placeholder="0.00" /></div>
+          <div class="form-group"><label>PTR (Nos)</label><input type="number" name="ptrNos" placeholder="0" /></div>
+          <div class="form-group"><label>PTR Capacity (MVA)</label><input type="number" name="ptrCap" step="0.01" placeholder="0.00" /></div>
+          <div class="form-group"><label>DTR (Nos)</label><input type="number" name="dtrNos" placeholder="0" /></div>
+          <div class="form-group"><label>DTR Capacity (kVA)</label><input type="number" name="dtrCap" step="0.01" placeholder="0.00" /></div>
+          <div class="form-group"><label>LT Line in km</label><input type="number" name="ltLine" step="0.01" placeholder="0.00" /></div>
+
+          <div class="form-group-header full"><strong>Approvals &amp; Work Orders (All Optional)</strong></div>
+          <div class="form-group full"><label>Work Order No &amp; Date</label><input type="text" name="workOrderNo" placeholder="WO No. &amp; Date" /></div>
+          <div class="form-group"><label>ADM Approval No</label><input type="text" name="admNo" placeholder="ADM No." /></div>
+          <div class="form-group"><label>ADM Approval Year</label><input type="text" name="admYear" placeholder="Year" /></div>
+
+          <div class="form-group">
+            <label>Current Status *</label>
+            <select name="status" required>
+              <option value="Not Started">Not Started</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Remark (Optional)</label>
+            <textarea name="remark" rows="2" placeholder="Any remarks..."></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelAddBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Work Details</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- EXCEL IMPORT -->
+    <section class="section form-section">
+      <h2>Excel Bulk Import</h2>
+      <p>You can upload an Excel spreadsheet (.xlsx, .xls) to import multiple SSTD works at once. The sheet columns must match the database parameters.</p>
+      <button class="btn btn-sm" id="downloadTemplateBtn"><i class="fa fa-download"></i> Download Excel Template</button>
+      <div class="drop-zone" id="dropZone">
+        <i class="fa fa-cloud-upload-alt fa-2x"></i>
+        <p><strong>Drag &amp; Drop Excel File</strong></p>
+        <p>or click to select file</p>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" />
+      </div>
+      <div id="importResult"></div>
+    </section>
+  </div>
+</div>
+
+<!-- REVIEW PROGRESS TAB -->
+<div id="tab-review" class="tab-content">
+  <section class="section">
+    <h2>Review Progress</h2>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Financial Year</label>
+        <select id="reviewFY">
+          <option value="23">FY 2022-23 (FY 23)</option>
+          <option value="24">FY 2023-24 (FY 24)</option>
+          <option value="25" selected>FY 2024-25 (FY 25)</option>
+          <option value="26">FY 2025-26 (FY 26)</option>
+          <option value="27">FY 2026-27 (FY 27)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Progress Status</label>
+        <select id="reviewStatus">
+          <option value="Completed">Completed Works</option>
+          <option value="In Progress">In Progress Works</option>
+          <option value="Not Started">Not Started Works</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="downloadPPTBtn"><i class="fa fa-file-powerpoint"></i> Download PPT Report</button>
+    </div>
+    <h3 id="reviewListTitle">Progress Review List (0 works)</h3>
+    <div class="table-wrap">
+      <table id="reviewTable">
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Work Details</th>
+            <th>Technical Provisions</th>
+            <th>Estimate Details</th>
+            <th>Work Order Info</th>
+            <th>Status</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="reviewBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay hidden" id="adminModal">
+  <div class="modal">
+    <button class="modal-close" id="closeAdminModal">&times;</button>
+    <h2>Admin Authentication</h2>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="adminUser" placeholder="Username" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="adminPass" placeholder="Password" />
+    </div>
+    <p class="error-msg hidden" id="loginError">Invalid username or password!</p>
+    <div class="form-actions">
+      <button class="btn btn-secondary" id="cancelLoginBtn">Cancel</button>
+      <button class="btn btn-primary" id="doLoginBtn">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT WORK MODAL -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal modal-lg">
+    <button class="modal-close" id="closeEditModal">&times;</button>
+    <h2>Edit Work Details</h2>
+    <form id="editWorkForm">
+      <input type="hidden" name="id" />
+      <div class="form-grid">
+        <div class="form-group full"><label>Name of Work *</label><input type="text" name="workName" required /></div>
+        <div class="form-group"><label>Division *</label>
+          <select name="division" required>
+            <option>Mandsaur</option><option>Malhargarh</option><option>Garoth</option><option>Sitamau</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Financial Year *</label>
+          <select name="fy" required>
+            <option value="23">FY 23</option><option value="24">FY 24</option><option value="25">FY 25</option><option value="26">FY 26</option><option value="27">FY 27</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Type of Work *</label>
+          <select name="workType" required>
+            <option>1. New substation</option><option>2. 33 Kv line bifurcation</option><option>3. 11 Kv line bifurcation</option>
+            <option>4. Additional PTR</option><option>5. Augmentation PTR</option><option>6. Additional DTR</option><option>7. Augmentation DTR</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Estimate Number</label><input type="text" name="estimateNo" /></div>
+        <div class="form-group"><label>33 kV line in km</label><input type="number" name="line33kv" step="0.01" /></div>
+        <div class="form-group"><label>11 kV line in km</label><input type="number" name="line11kv" step="0.01" /></div>
+        <div class="form-group"><label>PTR (Nos)</label><input type="number" name="ptrNos" /></div>
+        <div class="form-group"><label>PTR Capacity</label><input type="number" name="ptrCap" step="0.01" /></div>
+        <div class="form-group"><label>DTR (Nos)</label><input type="number" name="dtrNos" /></div>
+        <div class="form-group"><label>DTR Capacity</label><input type="number" name="dtrCap" step="0.01" /></div>
+        <div class="form-group"><label>LT Line in km</label><input type="number" name="ltLine" step="0.01" /></div>
+        <div class="form-group"><label>Estimate Amount (Lakhs)</label><input type="number" name="estimateAmount" step="0.01" /></div>
+        <div class="form-group full"><label>Work Order No &amp; Date</label><input type="text" name="workOrderNo" /></div>
+        <div class="form-group"><label>ADM Approval No</label><input type="text" name="admNo" /></div>
+        <div class="form-group"><label>ADM Approval Year</label><input type="text" name="admYear" /></div>
+        <div class="form-group"><label>Current Status *</label>
+          <select name="status" required>
+            <option value="Not Started">Not Started</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Remark</label><textarea name="remark" rows="2"></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-danger" id="deleteWorkBtn">Delete Work</button>
+        <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- VIEW WORK MODAL -->
+<div class="modal-overlay hidden" id="viewModal">
+  <div class="modal modal-lg">
+    <button class="modal-close" id="closeViewModal">&times;</button>
+    <h2>Work Detail Profile</h2>
+    <div id="viewContent" class="detail-profile"></div>
+    <div class="form-group" style="margin-top:1rem">
+      <label>Quick Update Status</label>
+      <select id="quickStatus"><option value="Not Started">Not Started</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option></select>
+    </div>
+    <div class="form-group">
+      <label>Remark</label>
+      <textarea id="quickRemark" rows="2"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="applyQuickUpdate">Apply Quick Update</button>
+      <button class="btn btn-secondary" id="closeViewBtn">Close View</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast">Work added successfully!</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
