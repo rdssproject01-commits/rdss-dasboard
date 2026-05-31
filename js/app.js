@@ -1,5 +1,5 @@
 /**
- * app.js — SSTD Dashboard Application Logic
+ * app.js — RDSS Dashboard Application Logic
  */
 
 /* ===========================
